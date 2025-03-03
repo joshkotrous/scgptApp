@@ -4,6 +4,9 @@ import { connectToDatabase } from "db";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { RequestLog } from "db/schema";
+export const config = {
+  runtime: "edge",
+};
 
 // Helper function to get the real IP address
 async function getIpAddress(req: Request): Promise<string> {
