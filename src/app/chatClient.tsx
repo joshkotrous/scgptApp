@@ -96,7 +96,7 @@ export default function ChatClient({ ipStats }: { ipStats: IPStats }) {
 
   if (messages.length === 0) {
     return (
-      <div className="relative size-full flex items-center justify-center flex-col gap-12 select-none">
+      <div className="relative size-full flex items-center justify-center flex-col gap-12 select-none px-4">
         <div className="text-center space-y-2">
           <Logo className="text-6xl" />
           <h3 className="text-xl text-zinc-500">
@@ -134,7 +134,7 @@ export default function ChatClient({ ipStats }: { ipStats: IPStats }) {
   }
 
   return (
-    <div className="h-full flex flex-col justify-between pb-24 space-y-4">
+    <div className="h-full flex flex-col justify-between pb-24 space-y-4 px-4">
       <div
         ref={messagesContainerRef}
         className="space-y-4 overflow-auto px-2 py-4"
