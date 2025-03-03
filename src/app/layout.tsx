@@ -4,6 +4,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import Logo from "./logo";
 import { Analytics } from "@vercel/analytics/react";
+import BuyMeCoffeeButton from "./buyMeACoffee";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -38,9 +39,15 @@ export default async function RootLayout({
             </div>
           }
         >
-          <nav className="p-4">
+          <nav className="p-4 flex justify-between items-center">
             <Logo className="text-2xl" />
+            <BuyMeCoffeeButton
+              target="_blank"
+              href="https://buymeacoffee.com/joshkotrous"
+              className=" text-xs p-2 "
+            />
           </nav>
+
           <Analytics />
           {children}
         </Suspense>
