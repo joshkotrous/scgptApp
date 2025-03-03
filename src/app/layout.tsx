@@ -3,6 +3,7 @@ import { Orbitron } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import Logo from "./logo";
+import { Analytics } from "@vercel/analytics/react";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default async function RootLayout({
           <nav className="p-4">
             <Logo className="text-2xl" />
           </nav>
+          <Analytics />
           {children}
         </Suspense>
       </body>
