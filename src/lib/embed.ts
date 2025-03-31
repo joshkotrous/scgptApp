@@ -21,7 +21,15 @@ export async function embedQuery(query: string): Promise<number[]> {
 
     return response.data[0].embedding;
   } catch (error) {
-    console.error("Error generating embedding:", error);
-    throw new Error(`Failed to generate embedding: ${error}`);
+    // Log that an error occurred without exposing sensitive details
+    console.error("Error generating embedding");
+    
+    // In non-production environments, log the error message for debugging
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error details:", error instanceof Error ? error.message : "unknown error");
+    }
+    
+    // Throw a generic error message to avoid leaking sensitive information
+    throw new Error("Failed to generate embedding");
   }
 }
