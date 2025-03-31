@@ -10,13 +10,43 @@ export interface IPStats {
   recentRequests: number;
 }
 
+// Validate an IP address with basic checks
+function validateIpAddress(ip: string | null): string | null {
+  if (!ip) return null;
+  
+  // Simple IPv4 validation
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+    const octets = ip.split('.');
+    for (const octet of octets) {
+      const num = parseInt(octet, 10);
+      if (isNaN(num) || num < 0 || num > 255) {
+        return null;
+      }
+    }
+    return ip;
+  }
+  
+  // Simplified IPv6 validation - just checks basic format
+  if (ip.includes(':')) {
+    // Check for invalid characters
+    if (/[^0-9a-fA-F:]/.test(ip)) {
+      return null;
+    }
+    return ip;
+  }
+  
+  return null;
+}
+
 async function getIpStats(): Promise<IPStats> {
   await connectToDatabase();
 
-  // Get the client's IP address
+  // Get the client's IP address with validation
   const headersList = await headers();
   const forwardedFor = headersList.get("x-forwarded-for");
-  const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown";
+  let candidateIp = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
+  const validatedIp = validateIpAddress(candidateIp);
+  const ip = validatedIp || "unknown";
 
   // Count total requests from this IP
   const totalRequests = await RequestLog.countDocuments({ ip });
