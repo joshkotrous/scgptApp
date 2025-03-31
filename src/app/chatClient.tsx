@@ -37,55 +37,116 @@ export default function ChatClient({ ipStats }: { ipStats: IPStats }) {
     scrollToBottom();
   }, [messages]);
 
+  // Function to validate and sanitize user input
+  function validateAndSanitizeInput(input: string): { isValid: boolean; sanitizedInput: string; errorMessage?: string } {
+    const trimmed = input.trim();
+    
+    if (!trimmed) {
+      return { isValid: false, sanitizedInput: "", errorMessage: "Input cannot be empty." };
+    }
+    
+    // Check for maximum length to prevent payload abuse
+    const MAX_INPUT_LENGTH = 5000;
+    if (trimmed.length > MAX_INPUT_LENGTH) {
+      return { 
+        isValid: false, 
+        sanitizedInput: "", 
+        errorMessage: `Input exceeds maximum allowed length of ${MAX_INPUT_LENGTH} characters.` 
+      };
+    }
+    
+    // Basic sanitization to prevent prompt injection and other common attacks
+    const sanitized = trimmed
+      // Remove or escape potential script tags
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Prevent common prompt injection patterns
+      .replace(/^\/(system|admin|debug)\s/i, 'blocked-command:')
+      .replace(/\[\[\s*prompt\s*\]\]/gi, '[blocked-prompt-injection]');
+      
+    return { isValid: true, sanitizedInput: sanitized };
+  }
+
   async function handleSendMessage() {
     if (!input.trim()) return;
 
-    const newUserMessage: Message = { role: "user", content: input };
+    // Validate and sanitize input before processing
+    const { isValid, sanitizedInput, errorMessage } = validateAndSanitizeInput(input);
+    
+    if (!isValid) {
+      // Display error message to user
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: errorMessage || "Invalid input. Please try again." }
+      ]);
+      setInput("");
+      return;
+    }
+
+    const newUserMessage: Message = { role: "user", content: sanitizedInput };
     setMessages((prev) => [...prev, newUserMessage]); // Add user message to chat
     setInput("");
     setIsLoading(true);
     setIsStreaming(false); // Reset streaming state
 
-    const res = await fetch("/api/rag", {
-      method: "POST",
-      body: JSON.stringify({ query: input }),
-    });
+    try {
+      const res = await fetch("/api/rag", {
+        method: "POST",
+        body: JSON.stringify({ query: sanitizedInput }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
 
-    if (!res.body) {
-      setIsLoading(false);
-      return;
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let result = "";
-
-    const newAssistantMessage: Message = { role: "assistant", content: "" };
-    setMessages((prev) => [...prev, newAssistantMessage]);
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      result += chunk;
-
-      // Set streaming to true after receiving the first chunk
-      if (!isStreaming) {
-        setIsStreaming(true);
+      if (!res.ok) {
+        throw new Error(`Server responded with status: ${res.status}`);
       }
 
-      setMessages((prev) => {
-        const updatedMessages = [...prev];
-        updatedMessages[updatedMessages.length - 1].content = result;
-        return [...updatedMessages];
-      });
-    }
+      if (!res.body) {
+        setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(false);
-    setIsStreaming(false);
-    router.refresh();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let result = "";
+
+      const newAssistantMessage: Message = { role: "assistant", content: "" };
+      setMessages((prev) => [...prev, newAssistantMessage]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        result += chunk;
+
+        // Set streaming to true after receiving the first chunk
+        if (!isStreaming) {
+          setIsStreaming(true);
+        }
+
+        setMessages((prev) => {
+          const updatedMessages = [...prev];
+          updatedMessages[updatedMessages.length - 1].content = result;
+          return [...updatedMessages];
+        });
+      }
+    } catch (error) {
+      // Handle errors during API call
+      setMessages((prev) => [
+        ...prev, 
+        { 
+          role: "assistant", 
+          content: "Sorry, there was an error processing your request. Please try again later." 
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+      setIsStreaming(false);
+      router.refresh();
+    }
   }
+  
   // Handle Enter key to send message
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
