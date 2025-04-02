@@ -10,28 +10,20 @@ export interface IPStats {
   recentRequests: number;
 }
 
-// Validate an IP address with basic checks
+// Validate an IP address with comprehensive checks
 function validateIpAddress(ip: string | null): string | null {
   if (!ip) return null;
   
-  // Simple IPv4 validation
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
-    const octets = ip.split('.');
-    for (const octet of octets) {
-      const num = parseInt(octet, 10);
-      if (isNaN(num) || num < 0 || num > 255) {
-        return null;
-      }
-    }
+  // Comprehensive IPv4 validation
+  const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  if (ipv4Pattern.test(ip)) {
     return ip;
   }
   
-  // Simplified IPv6 validation - just checks basic format
-  if (ip.includes(':')) {
-    // Check for invalid characters
-    if (/[^0-9a-fA-F:]/.test(ip)) {
-      return null;
-    }
+  // IPv6 validation with a comprehensive regex
+  const ipv6Pattern = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+  
+  if (ipv6Pattern.test(ip)) {
     return ip;
   }
   
