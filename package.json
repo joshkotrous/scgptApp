@@ -21,7 +21,7 @@
     "mongoose": "^8.11.0",
     "next": "15.2.0",
     "onnxruntime-node": "^1.20.1",
-    "openai": "^4.86.1",
+    "openai": "^4.94.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.0",
